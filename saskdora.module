@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Defines all the hooks this module implements.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function saskdora_menu() {
+  return array(
+    'islandora/object/%islandora_object/manage/collaborators' => array(
+      'title' => 'Collaborators',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+      'file' => 'includes/collaborators.form.inc',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('saskdora_manage_collaborators_form', 2),
+      'access callback' => 'islandora_object_manage_access_callback',
+      'access arguments' => array(array(ISLANDORA_ADD_DS
+      ), 2),
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function saskdora_permission() {
+  return array(
+    'can manage collaborators' => array(
+      'title' => 'Can Manage Collaborators',
+    ),
+  );
+}

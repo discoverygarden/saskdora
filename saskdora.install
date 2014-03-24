@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Defines the install and uninstall hooks for this module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function saskdora_install() {
+  // Create the Primary Investigator Role.
+  $role = new stdClass();
+  $role->name = 'primary investigator';
+  user_role_save($role);
+  // Create the Collaborator Role.
+  $role = new stdClass();
+  $role->name = 'collaborator';
+  user_role_save($role);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function saskdora_uninstall() {
+  // Delete the roles created by this module.
+  user_role_delete('primary investigator');
+  user_role_delete('collaborator');
+}
