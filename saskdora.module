@@ -1,0 +1,203 @@
+<?php
+
+/**
+ * @file
+ * Defines all the hooks this module implements.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function saskdora_menu() {
+  return array(
+    'islandora/object/%islandora_object/manage/collaborators' => array(
+      'title' => 'Collaborators',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+      'file' => 'includes/manage_collaborators.form.inc',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('saskdora_manage_collaborators_form', 2),
+      'access callback' => 'islandora_object_access_callback',
+      'access arguments' => array('can manage collaborators', 2),
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function saskdora_permission() {
+  return array(
+    'can manage collaborators' => array(
+      'title' => 'Can Manage Collaborators',
+    ),
+  );
+}
+
+/**
+ * Implements hook_CMODEL_PID_islandora_overview_object().
+ */
+function saskdora_islandora_overview_object(AbstractObject $object) {
+  module_load_include('inc', 'saskdora', 'includes/utilities');
+  $collaborators = saskdora_get_collaborators($object, TRUE, TRUE);
+  $rows = array();
+  foreach ($collaborators as $collaborator) {
+    $account = user_load_by_name($collaborator);
+    $rows[$collaborator] = array(
+      'user' => array(
+        'data' => array(
+          '#markup' => l($account->name, "user/{$account->uid}"),
+        ),
+      ),
+      'mail' => array(
+        'data' => array(
+          '#markup' => l($account->mail, "mailto:{$account->mail}"),
+        ),
+      ),
+    );
+  }
+  $investigator = saskdora_get_primary_investigator($object);
+  $investigator_name = $investigator ? $investigator->name : saskdora_get_primary_investigator_name($object);
+  $investigator_markup = $investigator ? l($investigator_name, "user/{$investigator->uid}") : $investigator_name;
+  return array(
+    array(
+      'primary_investigator' => array(
+        '#type' => 'item',
+        '#title' => t('Primary Investigator (Owner)'),
+        '#markup' => $investigator_markup,
+      ),
+      'label' => array('#markup' => t('Collaborators:')),
+      'collaborators' => array(
+        '#theme' => 'table',
+        '#header' => array(
+          'user' => array('data' => t('User')),
+          'mail' => array('data' => t('Email')),
+        ),
+        '#rows' => $rows,
+        '#empty' => t('No Collaborators'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_xacml_editor_child_query().
+ */
+function saskdora_fedora_system_FedoraObject_3_0_islandora_xacml_editor_child_query(AbstractObject $object) {
+  $query = <<<EOQ
+SELECT ?object FROM <#ri> WHERE {
+  {
+    ?object <fedora-rels-ext:isPartOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isConstituentOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isMemberOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isSubsetOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isMemberOfCollection> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isDescriptionOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isMetadataFor> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isAnnotationOf> <info:fedora/{$object->id}> .
+  }
+  ?object <fedora-model:state> <info:fedora/fedora-system:def/model#Active> .
+}
+EOQ;
+  $results = $object->repository->ri->sparqlQuery($query);
+  if (count($results) > 0) {
+    return array(
+      'saskdora' => array(
+        'type' => 'sparql',
+        'query' => $query,
+        'description' => t('All children of this object as defined by the Fedora Ontology (existing and new).'),
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_islandora_ingest_steps().
+ */
+function saskdora_islandora_ingest_steps(array &$form_state) {
+  module_load_include('inc', 'saskdora', 'includes/utilities');
+  $object = islandora_ingest_form_get_object($form_state);
+  $collaborators_step = NULL;
+  if (saskdora_is_primary_investigator($object) || user_access('can manage collaborators')) {
+    $collaborators_step = array(
+      'weight' => 15,
+      'type' => 'form',
+      'form_id' => 'saskdora_select_collaborators_form',
+      'module' => 'saskdora',
+      'file' => 'includes/select_collaborators.form.inc',
+    );
+  }
+  return array(
+    'saskdora_set_primary_investigator_ingest_step' => array(
+      'weight' => -50,
+      'type' => 'callback',
+      'module' => 'saskdora',
+      'do_function' => array(
+        'function' => 'saskdora_set_primary_investigator_ingest_step',
+        'args' => array(),
+      ),
+    ),
+    'saskdora_select_collaborators_step' => $collaborators_step,
+  );
+}
+
+/**
+ * Applies the parent's POLICY datastream to the child if it exists.
+ *
+ * @param array $form_state
+ *   The passed through form_state from hook_islandora_ingest_steps().
+ */
+function saskdora_set_primary_investigator_ingest_step(array &$form_state) {
+  $shared_storage = islandora_ingest_form_get_shared_storage($form_state);
+  if (isset($shared_storage['parent'])) {
+    $parent = islandora_object_load($shared_storage['parent']);
+    if ($parent) {
+      $object = islandora_ingest_form_get_object($form_state);
+      // The Primary Investigator, owns all the objects in their sub-graph.
+      $object->owner = $parent->owner;
+    }
+  }
+}
+
+/**
+ * Implements hook_islandora_ingest_steps_alter().
+ */
+function saskdora_islandora_ingest_steps_alter(array &$steps, array &$form_state) {
+  // Don't apply the XACML ingest steps.
+  unset($steps['islandora_xacml_policy']);
+}
+
+/**
+ * Implements hook_islandora_object_alter().
+ */
+function saskdora_islandora_object_ingested(AbstractObject $object) {
+  module_load_include('inc', 'saskdora', 'includes/utilities');
+  module_load_include('inc', 'saskdora', 'includes/collaborators.batch');
+  global $user;
+  // If the user not a primary investigator we assume that the parent object
+  // must belong to the primary investigator.
+  if (!saskdora_is_user_a_primary_investigator($user)) {
+    $primary_investigator = saskdora_get_parent_owner_name($object);
+    if (!empty($primary_investigator)) {
+      // We don't care the order in which objects are ingested. Therefore we
+      // have to update the children of any new objects in-case their children
+      // were ingested before they were, as is the case in the book batch.
+      $batch = saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition($object, $primary_investigator, array($user->name));
+      batch_set($batch);
+    }
+  }
+}
