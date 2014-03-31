@@ -56,13 +56,9 @@ function saskdora_select_collaborators_form(array $form, array &$form_state) {
       '#title' => t('Primary Investigator (Owner)'),
       '#markup' => $investigator_markup,
     ),
-    // We can't set the caption on tableselect like we can when we use a plain
-    // table, therefore we have this little work around.
-    'caption' => array(
-      '#type' => 'item',
-      '#title' => t('Collaborators'),
-    ),
     'collaborators' => array(
+      '#theme_wrappers' => array('form_element'),
+      '#title' => t('Collaborators'),
       '#type' => 'tableselect',
       '#header' => array(
         'user' => array('data' => t('User')),

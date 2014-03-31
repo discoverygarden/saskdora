@@ -21,7 +21,7 @@
 function saskdora_manage_collaborators_form(array $form, array &$form_state, AbstractObject $object) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   drupal_set_title(t('Manage Collaborators'));
-  $form_state['object'] = $object->id;
+  $form_state['object_id'] = $object->id;
   $collaborators = saskdora_get_collaborators($object, TRUE, TRUE);
   $form_state['collaborators'] = isset($form_state['collaborators']) ?
       $form_state['collaborators'] :
@@ -42,7 +42,7 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       ),
     );
   }
-  $decedents = saskdora_get_decedents($object);
+  $descendants = saskdora_get_descendants($object);
   $messages = saskdora_manage_collaborators_form_get_pending_changes_messages($collaborators, $form_state['collaborators']);
   $investigator = saskdora_get_primary_investigator($object);
   $form_state['primary_investigator_name'] = $investigator ? $investigator->name : saskdora_get_primary_investigator_name($object);
@@ -56,23 +56,18 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       '#attributes' => array(
         'class' => array('view-changed', 'messages', 'warning'),
       ),
-      '#markup' => theme('item_list', array(
-        'type' => 'ul',
-        'items' => $messages,
-      )),
+      '#theme' => 'item_list',
+      '#type' => 'ul',
+      '#items' => $messages,
     ),
     'primary' => array(
       '#type' => 'item',
       '#title' => t('Primary Investigator (Owner)'),
       '#markup' => $investigator_markup,
     ),
-    // We can't set the caption on tableselect like we can when we use a plain
-    // table, therefore we have this little work around.
-    'caption' => array(
-      '#type' => 'item',
-      '#title' => t('Collaborators'),
-    ),
     'collaborators' => array(
+      '#theme_wrappers' => array('form_element'),
+      '#title' => t('Collaborators'),
       '#type' => 'tableselect',
       '#header' => array(
         'user' => array('data' => t('User')),
@@ -126,8 +121,8 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       ),
       // We default to "none" when the object has no children, and we do not
       // allow any other options to be selected.
-      '#default_value' => empty($decedents) ? 'none' : NULL,
-      '#disabled' => empty($decedents),
+      '#default_value' => empty($descendants) ? 'none' : NULL,
+      '#disabled' => empty($descendants),
     ),
     'submit' => array(
       '#type' => 'submit',
@@ -254,7 +249,7 @@ function saskdora_manage_collaborators_form_add_collaborator(array $form, array 
  *   The Drupal form state.
  */
 function saskdora_manage_collaborators_form_cancel_submit(array $form, array &$form_state) {
-  $form_state['redirect'] = "islandora/object/{$form_state['object']}";
+  $form_state['redirect'] = "islandora/object/{$form_state['object_id']}";
 }
 
 /**
@@ -268,7 +263,7 @@ function saskdora_manage_collaborators_form_cancel_submit(array $form, array &$f
 function saskdora_manage_collaborators_form_submit(array $form, array &$form_state) {
   module_load_include('inc', 'saskdora', 'includes/collaborators.batch');
   module_load_include('inc', 'saskdora', 'includes/utilities');
-  $object = islandora_object_load($form_state['object']);
+  $object = islandora_object_load($form_state['object_id']);
   $original_collaborators = saskdora_get_collaborators($object);
   $new_collaborators = array_keys($form_state['values']['collaborators']);
   $added = array_diff($new_collaborators, $original_collaborators);
@@ -286,5 +281,7 @@ function saskdora_manage_collaborators_form_submit(array $form, array &$form_sta
       $batch = saskdora_set_collaborators_recursive_batch_definition($object, $new_collaborators);
       break;
   }
-  batch_set($batch);
+  if (isset($batch)) {
+    batch_set($batch);
+  }
 }

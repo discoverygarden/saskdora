@@ -36,7 +36,7 @@ function saskdora_set_collaborators_batch_definition(AbstractObject $object, arr
 /**
  * Batch definition which will recursively update an object's collaborators.
  *
- * The batch is non-destructive in that the child objects will not loose any
+ * The batch is non-destructive in that the child objects will not lose any
  * collaborators in which are not referenced in $remove.
  *
  * @param AbstractObject $object
@@ -51,7 +51,7 @@ function saskdora_set_collaborators_batch_definition(AbstractObject $object, arr
  */
 function saskdora_update_collaborators_recursive_batch_definition(AbstractObject $object, array $add, array $remove) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
-  $decedents = saskdora_get_decedents($object);
+  $descendants = saskdora_get_descendants($object);
   $operations = array(
     array('saskdora_collaborators_start_batch_operation', array(array())),
     array(
@@ -59,7 +59,7 @@ function saskdora_update_collaborators_recursive_batch_definition(AbstractObject
       array($object->id, $add, $remove),
     ),
   );
-  foreach ($decedents as $pid) {
+  foreach ($descendants as $pid) {
     $operations[] = array(
       'saskdora_collaborators_update_collaborators_batch_operation',
       array($pid, $add, $remove),
@@ -92,7 +92,7 @@ function saskdora_update_collaborators_recursive_batch_definition(AbstractObject
  */
 function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $object, array $collaborators) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
-  $decedents = saskdora_get_decedents($object);
+  $descendants = saskdora_get_descendants($object);
   $operations = array(
     array('saskdora_collaborators_start_batch_operation', array(array())),
     array(
@@ -100,7 +100,7 @@ function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $o
       array($object->id, $collaborators),
     ),
   );
-  foreach ($decedents as $pid) {
+  foreach ($descendants as $pid) {
     $operations[] = array(
       'saskdora_collaborators_set_collaborators_batch_operation',
       array($pid, $collaborators),
@@ -135,7 +135,7 @@ function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $o
  */
 function saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition(AbstractObject $object, $primary_investigator, array $collaborators) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
-  $decedents = saskdora_get_decedents($object);
+  $descendants = saskdora_get_descendants($object);
   $operations = array(
     array('saskdora_collaborators_start_batch_operation', array(array('display_message' => FALSE))),
     array(
@@ -143,7 +143,7 @@ function saskdora_set_primary_investigator_and_collaborators_recursive_batch_def
       array($object->id, $primary_investigator, $collaborators),
     ),
   );
-  foreach ($decedents as $pid) {
+  foreach ($descendants as $pid) {
     $operations[] = array(
       'saskdora_set_primary_investigator_and_collaborators_batch_operation',
       array($pid, $primary_investigator, $collaborators),

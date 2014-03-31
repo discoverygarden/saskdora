@@ -134,9 +134,7 @@ function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only =
  */
 function saskdora_set_collaborators(AbstractObject $object, array $collaborators) {
   $xacml = new Xacml();
-  // Always allow fedoraAdmin and the primary user management access.
   $users = $collaborators;
-  $users[] = 'fedoraAdmin';
   $users[] = saskdora_get_primary_investigator_name($object);
   $xacml->viewingRule->addUser($users);
   $xacml->managementRule->addUser($users);
@@ -183,8 +181,6 @@ function saskdora_update_collaborators(AbstractObject $object, array $add, array
   else {
     try {
       $xacml = new Xacml($object['POLICY']->content);
-      // Always allow fedoraAdmin and the primary user management access.
-      $add[] = 'fedoraAdmin';
       $add[] = saskdora_get_primary_investigator_name($object);
       $xacml->managementRule->addUser($add);
       $xacml->viewingRule->addUser($add);
@@ -206,21 +202,15 @@ function saskdora_update_collaborators(AbstractObject $object, array $add, array
  * can break it out across several batch operations.
  *
  * @param AbstractObject $object
- *   The object whose decedents will be returned.
+ *   The object whose descendants will be returned.
  *
  * @return string[]
- *   The PIDs of all decedents of the given object.
+ *   The PIDs of all descendants of the given object.
  */
-function saskdora_get_decedents(AbstractObject $object) {
+function saskdora_get_descendants(AbstractObject $object) {
   module_load_include('inc', 'islandora_xacml_editor', 'includes/batch');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $query_choices = array();
-  foreach (islandora_build_hook_list('islandora_xacml_editor_child_query', $object->models) as $hook) {
-    $temp = module_invoke_all($hook, $object);
-    if (!empty($temp)) {
-      $query_choices = array_merge_recursive($query_choices, $temp);
-    }
-  }
+  $query_choices = islandora_invoke_hook_list('islandora_xacml_editor_child_query', $object->models, array($object));
   if (isset($query_choices['saskdora'])) {
     $query = new IslandoraXacmlEditorQuery($object->id, $query_choices['saskdora']);
     return $query->getPids();

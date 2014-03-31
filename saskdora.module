@@ -66,8 +66,9 @@ function saskdora_islandora_overview_object(AbstractObject $object) {
         '#title' => t('Primary Investigator (Owner)'),
         '#markup' => $investigator_markup,
       ),
-      'label' => array('#markup' => t('Collaborators:')),
       'collaborators' => array(
+        '#theme_wrappers' => array('form_element'),
+        '#title' => t('Collaborators'),
         '#theme' => 'table',
         '#header' => array(
           'user' => array('data' => t('User')),
