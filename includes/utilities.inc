@@ -134,9 +134,7 @@ function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only =
  */
 function saskdora_set_collaborators(AbstractObject $object, array $collaborators) {
   $xacml = new Xacml();
-  // Always allow fedoraAdmin and the primary user management access.
   $users = $collaborators;
-  $users[] = 'fedoraAdmin';
   $users[] = saskdora_get_primary_investigator_name($object);
   $xacml->viewingRule->addUser($users);
   $xacml->managementRule->addUser($users);
@@ -183,8 +181,6 @@ function saskdora_update_collaborators(AbstractObject $object, array $add, array
   else {
     try {
       $xacml = new Xacml($object['POLICY']->content);
-      // Always allow fedoraAdmin and the primary user management access.
-      $add[] = 'fedoraAdmin';
       $add[] = saskdora_get_primary_investigator_name($object);
       $xacml->managementRule->addUser($add);
       $xacml->viewingRule->addUser($add);
@@ -200,32 +196,53 @@ function saskdora_update_collaborators(AbstractObject $object, array $add, array
 }
 
 /**
- * Gets the objects decedent's in which the XACML Policy could be applied to.
+ * Gets the objects immediate descendants.
  *
- * It's possible for this function to time out, if this becomes a problem we
- * can break it out across several batch operations.
+ * Only gets active objects.
  *
  * @param AbstractObject $object
- *   The object whose decedents will be returned.
+ *   The object whose descendants will be returned.
  *
  * @return string[]
- *   The PIDs of all decedents of the given object.
+ *   The PIDs of all descendants of the given object.
  */
-function saskdora_get_decedents(AbstractObject $object) {
+function saskdora_get_immediate_descendants(AbstractObject $object) {
   module_load_include('inc', 'islandora_xacml_editor', 'includes/batch');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $query_choices = array();
-  foreach (islandora_build_hook_list('islandora_xacml_editor_child_query', $object->models) as $hook) {
-    $temp = module_invoke_all($hook, $object);
-    if (!empty($temp)) {
-      $query_choices = array_merge_recursive($query_choices, $temp);
-    }
+  $query = <<<EOQ
+SELECT ?object FROM <#ri> WHERE {
+  {
+    ?object <fedora-rels-ext:isPartOf> <info:fedora/{$object->id}> .
   }
-  if (isset($query_choices['saskdora'])) {
-    $query = new IslandoraXacmlEditorQuery($object->id, $query_choices['saskdora']);
-    return $query->getPids();
+  UNION {
+    ?object <fedora-rels-ext:isConstituentOf> <info:fedora/{$object->id}> .
   }
-  return array();
+  UNION {
+    ?object <fedora-rels-ext:isMemberOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isSubsetOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isMemberOfCollection> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isDescriptionOf> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isMetadataFor> <info:fedora/{$object->id}> .
+  }
+  UNION {
+    ?object <fedora-rels-ext:isAnnotationOf> <info:fedora/{$object->id}> .
+  }
+  ?object <fedora-model:state> <info:fedora/fedora-system:def/model#Active> .
+}
+EOQ;
+  $results = $object->repository->ri->sparqlQuery($query);
+  $get_pid = function($object) {
+    return $object['object']['value'];
+  };
+  return array_map($get_pid, $results);
 }
 
 /**
