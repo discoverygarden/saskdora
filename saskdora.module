@@ -197,7 +197,7 @@ function saskdora_islandora_object_ingested(AbstractObject $object) {
       // We don't care the order in which objects are ingested. Therefore we
       // have to update the children of any new objects in-case their children
       // were ingested before they were, as is the case in the book batch.
-      $batch = saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition($object, $primary_investigator, array($user->name));
+      $batch = saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition($object, $primary_investigator, array($user->name), FALSE);
       batch_set($batch);
     }
   }

@@ -12,16 +12,22 @@
  *   The object to update.
  * @param array $collaborators
  *   The collaborators to set the object to.
+ * @param bool $display_message
+ *   TRUE to show the results of the batch as a message FALSE otherwise.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_set_collaborators_batch_definition(AbstractObject $object, array $collaborators) {
+function saskdora_set_collaborators_batch_definition(AbstractObject $object, array $collaborators, $display_message = TRUE) {
   return array(
     'operations' => array(
-      array('saskdora_collaborators_start_batch_operation', array(array())),
-      array('saskdora_collaborators_set_collaborators_batch_operation',
-        array($object->id, $collaborators),
+      array(
+        'saskdora_collaborators_start_batch_operation',
+        array($object->id, array('display_message' => $display_message)),
+      ),
+      array(
+        'saskdora_collaborators_set_collaborators_batch_operation',
+        array($collaborators),
       ),
     ),
     'finished' => 'saskdora_collaborators_batch_finished',
@@ -45,28 +51,28 @@ function saskdora_set_collaborators_batch_definition(AbstractObject $object, arr
  *   The collaborators to add.
  * @param array $remove
  *   The collaborators to remove.
+ * @param bool $display_message
+ *   TRUE to show the results of the batch as a message FALSE otherwise.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_update_collaborators_recursive_batch_definition(AbstractObject $object, array $add, array $remove) {
-  module_load_include('inc', 'saskdora', 'includes/utilities');
-  $descendants = saskdora_get_descendants($object);
-  $operations = array(
-    array('saskdora_collaborators_start_batch_operation', array(array())),
-    array(
-      'saskdora_collaborators_update_collaborators_batch_operation',
-      array($object->id, $add, $remove),
-    ),
-  );
-  foreach ($descendants as $pid) {
-    $operations[] = array(
-      'saskdora_collaborators_update_collaborators_batch_operation',
-      array($pid, $add, $remove),
-    );
-  }
+function saskdora_update_collaborators_recursive_batch_definition(AbstractObject $object, array $add, array $remove, $display_message = TRUE) {
   return array(
-    'operations' => $operations,
+    'operations' => array(
+      array(
+        'saskdora_collaborators_start_batch_operation',
+        array($object->id, array('display_message' => $display_message)),
+      ),
+      array(
+        'saskdora_find_descendants_batch_operation',
+        array(),
+      ),
+      array(
+        'saskdora_collaborators_update_collaborators_batch_operation',
+        array($add, $remove),
+      ),
+    ),
     'finished' => 'saskdora_collaborators_batch_finished',
     'title' => t('Granting access to @label ...', array('@label' => $object->label)),
     'init_message' => t('Preparing to grant access to @label ...', array('@label' => $object->label)),
@@ -86,28 +92,28 @@ function saskdora_update_collaborators_recursive_batch_definition(AbstractObject
  *   The object to update.
  * @param array $collaborators
  *   The collaborators to grant access to the object.
+ * @param bool $display_message
+ *   TRUE to show the results of the batch as a message FALSE otherwise.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $object, array $collaborators) {
-  module_load_include('inc', 'saskdora', 'includes/utilities');
-  $descendants = saskdora_get_descendants($object);
-  $operations = array(
-    array('saskdora_collaborators_start_batch_operation', array(array())),
-    array(
-      'saskdora_collaborators_set_collaborators_batch_operation',
-      array($object->id, $collaborators),
-    ),
-  );
-  foreach ($descendants as $pid) {
-    $operations[] = array(
-      'saskdora_collaborators_set_collaborators_batch_operation',
-      array($pid, $collaborators),
-    );
-  }
+function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $object, array $collaborators, $display_message = TRUE) {
   return array(
-    'operations' => $operations,
+    'operations' => array(
+      array(
+        'saskdora_collaborators_start_batch_operation',
+        array($object->id, array('display_message' => $display_message)),
+      ),
+      array(
+        'saskdora_find_descendants_batch_operation',
+        array(),
+      ),
+      array(
+        'saskdora_collaborators_set_collaborators_batch_operation',
+        array($collaborators),
+      ),
+    ),
     'finished' => 'saskdora_collaborators_batch_finished',
     'title' => t('Granting access to @label ...', array('@label' => $object->label)),
     'init_message' => t('Preparing to grant access to @label ...', array('@label' => $object->label)),
@@ -129,28 +135,28 @@ function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $o
  *   The primary investigator.
  * @param string[] $collaborators
  *   The collaborators to grant access to the object.
+ * @param bool $display_message
+ *   TRUE to show the results of the batch as a message FALSE otherwise.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition(AbstractObject $object, $primary_investigator, array $collaborators) {
-  module_load_include('inc', 'saskdora', 'includes/utilities');
-  $descendants = saskdora_get_descendants($object);
-  $operations = array(
-    array('saskdora_collaborators_start_batch_operation', array(array('display_message' => FALSE))),
-    array(
-      'saskdora_set_primary_investigator_and_collaborators_batch_operation',
-      array($object->id, $primary_investigator, $collaborators),
-    ),
-  );
-  foreach ($descendants as $pid) {
-    $operations[] = array(
-      'saskdora_set_primary_investigator_and_collaborators_batch_operation',
-      array($pid, $primary_investigator, $collaborators),
-    );
-  }
+function saskdora_set_primary_investigator_and_collaborators_recursive_batch_definition(AbstractObject $object, $primary_investigator, array $collaborators, $display_message = TRUE) {
   return array(
-    'operations' => $operations,
+    'operations' => array(
+      array(
+        'saskdora_collaborators_start_batch_operation',
+        array($object->id, array('display_message' => $display_message)),
+      ),
+      array(
+        'saskdora_find_descendants_batch_operation',
+        array(),
+      ),
+      array(
+        'saskdora_set_primary_investigator_and_collaborators_batch_operation',
+        array($primary_investigator, $collaborators),
+      ),
+    ),
     'finished' => 'saskdora_collaborators_batch_finished',
     'title' => t('Granting access to @label ...', array('@label' => $object->label)),
     'init_message' => t('Preparing to grant access to @label ...', array('@label' => $object->label)),
@@ -163,18 +169,55 @@ function saskdora_set_primary_investigator_and_collaborators_recursive_batch_def
 /**
  * Sets up a batch by initializing the context.
  *
+ * @param string $pid
+ *   The PID of the object that is the focus of this batch.
  * @param array $options
  *   Configuration options for the batch.
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_collaborators_start_batch_operation(array $options, array &$context) {
+function saskdora_collaborators_start_batch_operation($pid, array $options, array &$context) {
   $options += array('display_message' => TRUE);
   $context['results'] = array(
     'options' => $options,
-    // "successful" an array of boolean values indicating operation success.
+    'queried' => array(),
+    'objects' => array($pid),
+    // 'successful' an array of boolean values indicating operation success.
     'successful' => array(),
   );
+}
+
+/**
+ * Populates the 'objects' section of batch context.
+ *
+ * Uses 'queried' section of the context to stored the objects whose descendants
+ * have been queried.
+ *
+ * @param array $context
+ *   The context of this batch operation.
+ */
+function saskdora_find_descendants_batch_operation(array &$context) {
+  module_load_include('inc', 'saskdora', 'includes/utilities');
+  $results = &$context['results'];
+  $objects = &$results['objects'];
+  $queried = &$results['queried'];
+  $remaining = array_diff($objects, $queried);
+  $pid = $queried[] = array_pop($remaining);
+  $object = islandora_object_load($pid);
+  if (!$object) {
+    watchdog('saskdora', 'Object %pid not found. It and its descendants could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
+    $context['results']['successful'][$pid] = FALSE;
+    $context['finished'] = count($remaining) / count($objects);
+  }
+  else {
+    $descendants = saskdora_get_immediate_descendants($object);
+    $objects = array_unique(array_merge($objects, $descendants));
+    $context['message'] = t('Fetching descendants of @label (@pid)...', array(
+      '@pid' => $object->id,
+      '@label' => $object->label,
+    ));
+  }
+  $context['finished'] = count($queried) / count($objects);
 }
 
 /**
@@ -183,8 +226,6 @@ function saskdora_collaborators_start_batch_operation(array $options, array &$co
  * This POLICY changes is non-destructive in that other permissions will not be
  * lost.
  *
- * @param string $pid
- *   The PID of the object to modify.
  * @param string[] $add
  *   The collaborators to add to the POLICY.
  * @param string[] $remove
@@ -192,24 +233,33 @@ function saskdora_collaborators_start_batch_operation(array $options, array &$co
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_collaborators_update_collaborators_batch_operation($pid, array $add, array $remove, array &$context) {
+function saskdora_collaborators_update_collaborators_batch_operation(array $add, array $remove, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $results = &$context['results'];
+  if (empty($context['sandbox'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['total'] = count($results['objects']);
+  }
+  $index = &$context['sandbox']['progress'];
+  $pid = $context['results']['objects'][$index];
   $object = islandora_object_load($pid);
   if (!$object) {
     watchdog('saskdora', 'Object %pid not found and could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
     $results['successful'][$pid] = FALSE;
-    return;
   }
-  try {
-    saskdora_update_collaborators($object, $add, $remove);
-    watchdog('saskdora', 'Updated collaborators on %pid', array('%pid' => $pid));
-    $results['successful'][$pid] = TRUE;
+  else {
+    try {
+      saskdora_update_collaborators($object, $add, $remove);
+      watchdog('saskdora', 'Updated collaborators on %pid', array('%pid' => $pid));
+      $results['successful'][$pid] = TRUE;
+    }
+    catch (Exception $e) {
+      watchdog_exception('saskdora', $e);
+      $results['successful'][$pid] = FALSE;
+    }
   }
-  catch (Exception $e) {
-    watchdog_exception('saskdora', $e);
-    $results['successful'][$pid] = FALSE;
-  }
+  ++$index;
+  $context['finished'] = $index / $context['sandbox']['total'];
   $context['message'] = t('Updating @label (@pid)...', array(
     '@pid' => $object->id,
     '@label' => $object->label,
@@ -221,31 +271,39 @@ function saskdora_collaborators_update_collaborators_batch_operation($pid, array
  *
  * This POLICY changes is destructive other permissions will be lost.
  *
- * @param string $pid
- *   The PID of the object to modify.
  * @param string[] $collaborators
  *   The collaborators to set on the POLICY.
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_collaborators_set_collaborators_batch_operation($pid, array $collaborators, array &$context) {
+function saskdora_collaborators_set_collaborators_batch_operation(array $collaborators, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
-  $object = islandora_object_load($pid);
   $results = &$context['results'];
+  if (empty($context['sandbox'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['total'] = count($results['objects']);
+  }
+  $index = &$context['sandbox']['progress'];
+  $pid = $context['results']['objects'][$index];
+  $object = islandora_object_load($pid);
   if (!$object) {
     watchdog('saskdora', 'Object %pid not found and could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
     $results['successful'][$pid] = FALSE;
     return;
   }
-  try {
-    saskdora_set_collaborators($object, $collaborators);
-    watchdog('saskdora', 'Set collaborators on %pid', array('%pid' => $pid), WATCHDOG_NOTICE);
-    $results['successful'][$pid] = TRUE;
+  else {
+    try {
+      saskdora_set_collaborators($object, $collaborators);
+      watchdog('saskdora', 'Set collaborators on %pid', array('%pid' => $pid), WATCHDOG_NOTICE);
+      $results['successful'][$pid] = TRUE;
+    }
+    catch (Exception $e) {
+      watchdog_exception('saskdora', $e);
+      $results['successful'][$pid] = FALSE;
+    }
   }
-  catch (Exception $e) {
-    watchdog_exception('saskdora', $e);
-    $results['successful'][$pid] = FALSE;
-  }
+  ++$index;
+  $context['finished'] = $index / $context['sandbox']['total'];
   $context['message'] = t('Updating @label (@pid)...', array(
     '@pid' => $object->id,
     '@label' => $object->label,
@@ -271,22 +329,32 @@ function saskdora_collaborators_set_collaborators_batch_operation($pid, array $c
 function saskdora_set_primary_investigator_and_collaborators_batch_operation($pid, $primary_investigator, array $collaborators, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $results = &$context['results'];
+  if (empty($context['sandbox'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['total'] = count($results['objects']);
+  }
+  $index = &$context['sandbox']['progress'];
+  $pid = $context['results']['objects'][$index];
   $object = islandora_object_load($pid);
   if (!$object) {
     watchdog('saskdora', 'Object %pid not found and could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
     $results['successful'][$pid] = FALSE;
     return;
   }
-  try {
-    $object->owner = $primary_investigator;
-    saskdora_set_collaborators($object, $collaborators);
-    watchdog('saskdora', 'Set collaborators on %pid', array('%pid' => $pid), WATCHDOG_NOTICE);
-    $results['successful'][$pid] = TRUE;
+  else {
+    try {
+      $object->owner = $primary_investigator;
+      saskdora_set_collaborators($object, $collaborators);
+      watchdog('saskdora', 'Set collaborators on %pid', array('%pid' => $pid), WATCHDOG_NOTICE);
+      $results['successful'][$pid] = TRUE;
+    }
+    catch (Exception $e) {
+      watchdog_exception('saskdora', $e);
+      $results['successful'][$pid] = FALSE;
+    }
   }
-  catch (Exception $e) {
-    watchdog_exception('saskdora', $e);
-    $results['successful'][$pid] = FALSE;
-  }
+  ++$index;
+  $context['finished'] = $index / $context['sandbox']['total'];
   $context['message'] = t('Updating @label (@pid)...', array(
     '@pid' => $object->id,
     '@label' => $object->label,

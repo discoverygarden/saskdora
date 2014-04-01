@@ -42,7 +42,7 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       ),
     );
   }
-  $descendants = saskdora_get_descendants($object);
+  $descendants = saskdora_get_immediate_descendants($object);
   $messages = saskdora_manage_collaborators_form_get_pending_changes_messages($collaborators, $form_state['collaborators']);
   $investigator = saskdora_get_primary_investigator($object);
   $form_state['primary_investigator_name'] = $investigator ? $investigator->name : saskdora_get_primary_investigator_name($object);
