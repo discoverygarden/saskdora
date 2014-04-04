@@ -9,14 +9,31 @@
  * Implements hook_install().
  */
 function saskdora_install() {
+  $islandora_manage_permissions = array(
+    'view fedora repository objects',
+    'edit fedora metadata',
+    'add fedora datastreams',
+    'ingest fedora objects',
+    'delete fedora objects and datastreams',
+    'manage object properties',
+    'view old datastream versions',
+    'manage deleted objects',
+    'revert to old datastream',
+    'regenerate derivatives for an object',
+  );
   // Create the Collaborator Role.
   $collaborator = new stdClass();
   $collaborator->name = 'collaborator';
   user_role_save($collaborator);
+  user_role_grant_permissions($collaborator->rid, $islandora_manage_permissions);
   // Create the Primary Investigator Role.
   $primary = new stdClass();
   $primary->name = 'primary investigator';
   user_role_save($primary);
+  $primary_perms = array_merge($islandora_manage_permissions,
+    array('access user profiles')
+  );
+  user_role_grant_permissions($primary->rid, $primary_perms);
   // Move the Admin user to the back up the line
   $administrator = user_role_load_by_name('administrator');
   if ($administrator) {
