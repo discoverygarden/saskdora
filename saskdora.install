@@ -9,14 +9,20 @@
  * Implements hook_install().
  */
 function saskdora_install() {
-  // Create the Primary Investigator Role.
-  $role = new stdClass();
-  $role->name = 'primary investigator';
-  user_role_save($role);
   // Create the Collaborator Role.
-  $role = new stdClass();
-  $role->name = 'collaborator';
-  user_role_save($role);
+  $collaborator = new stdClass();
+  $collaborator->name = 'collaborator';
+  user_role_save($collaborator);
+  // Create the Primary Investigator Role.
+  $primary = new stdClass();
+  $primary->name = 'primary investigator';
+  user_role_save($primary);
+  // Move the Admin user to the back up the line
+  $administrator = user_role_load_by_name('administrator');
+  if ($administrator) {
+    $administrator->weight = $primary->weight + 1;
+    user_role_save($administrator);
+  }
 }
 
 /**
