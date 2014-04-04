@@ -317,8 +317,6 @@ function saskdora_collaborators_set_collaborators_batch_operation(array $collabo
  *
  * This POLICY changes is destructive other permissions will be lost.
  *
- * @param string $pid
- *   The PID of the object to modify.
  * @param string $primary_investigator
  *   The user name of the primary investigator.
  * @param string[] $collaborators
@@ -326,7 +324,7 @@ function saskdora_collaborators_set_collaborators_batch_operation(array $collabo
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_set_primary_investigator_and_collaborators_batch_operation($pid, $primary_investigator, array $collaborators, array &$context) {
+function saskdora_set_primary_investigator_and_collaborators_batch_operation($primary_investigator, array $collaborators, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $results = &$context['results'];
   if (empty($context['sandbox'])) {
