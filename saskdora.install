@@ -31,7 +31,7 @@ function saskdora_install() {
   $primary->name = 'primary investigator';
   user_role_save($primary);
   $primary_perms = array_merge($islandora_manage_permissions,
-    array('access user profiles')
+    array('access user profiles', 'can manage collaborators')
   );
   user_role_grant_permissions($primary->rid, $primary_perms);
   // Move the Admin user to the back up the line
