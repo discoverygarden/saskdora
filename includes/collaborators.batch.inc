@@ -377,7 +377,7 @@ function saskdora_collaborators_batch_finished($success, $results, $operations) 
         drupal_set_message(t('Successfully updated @successful of @total objects', $vars), 'status');
       }
       if ($failed) {
-        drupal_set_message(t('Failed to update @failed of @total objects, Please notify the administrator.', $vars), 'error');
+        drupal_set_message(t('Failed to update @failed of @total objects. Please notify the administrator.', $vars), 'error');
       }
     }
   }
