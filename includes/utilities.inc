@@ -105,11 +105,7 @@ function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only =
     }
   }
   if ($drupal_users_only) {
-    foreach ($collaborators as $key => $collaborator) {
-      if (user_load_by_name($collaborator) === FALSE) {
-        unset($collaborators[$key]);
-      }
-    }
+    $collaborators = array_filter($collaborators, 'user_load_by_name');
   }
   if ($exclude_primary_investigator) {
     foreach ($collaborators as $key => $collaborator) {
