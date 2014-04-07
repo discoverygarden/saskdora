@@ -264,7 +264,7 @@ function saskdora_manage_collaborators_form_submit(array $form, array &$form_sta
   module_load_include('inc', 'saskdora', 'includes/collaborators.batch');
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $object = islandora_object_load($form_state['object_id']);
-  $original_collaborators = saskdora_get_collaborators($object);
+  $original_collaborators = saskdora_get_collaborators($object, TRUE, TRUE);
   $new_collaborators = array_keys($form_state['values']['collaborators']);
   $added = array_diff($new_collaborators, $original_collaborators);
   $removed = array_diff($original_collaborators, $new_collaborators);

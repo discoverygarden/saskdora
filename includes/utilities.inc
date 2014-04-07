@@ -96,7 +96,8 @@ function saskdora_is_collaborator(AbstractObject $object, $account = NULL) {
  *   The names of the collaborators.
  */
 function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only = FALSE, $exclude_primary_investigator = FALSE) {
-  $collaborators = array();
+  $primary_investigator_name = saskdora_get_primary_investigator_name($object);
+  $collaborators = array($primary_investigator_name);
   if (isset($object['POLICY'])) {
     $xacml = new Xacml($object['POLICY']->content);
     if ($xacml->managementRule->isPopulated()) {
@@ -104,14 +105,9 @@ function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only =
     }
   }
   if ($drupal_users_only) {
-    foreach ($collaborators as $key => $collaborator) {
-      if (user_load_by_name($collaborator) === FALSE) {
-        unset($collaborators[$key]);
-      }
-    }
+    $collaborators = array_filter($collaborators, 'user_load_by_name');
   }
   if ($exclude_primary_investigator) {
-    $primary_investigator_name = saskdora_get_primary_investigator_name($object);
     foreach ($collaborators as $key => $collaborator) {
       if ($collaborator == $primary_investigator_name) {
         unset($collaborators[$key]);
@@ -181,11 +177,13 @@ function saskdora_update_collaborators(AbstractObject $object, array $add, array
   else {
     try {
       $xacml = new Xacml($object['POLICY']->content);
+      // Remove before adding as we don't want to remove a user that is also
+      // being added automatically such as the owner / primary investigator.
+      $xacml->managementRule->removeUser($remove);
+      $xacml->viewingRule->removeUser($remove);
       $add[] = saskdora_get_primary_investigator_name($object);
       $xacml->managementRule->addUser($add);
       $xacml->viewingRule->addUser($add);
-      $xacml->managementRule->removeUser($remove);
-      $xacml->viewingRule->removeUser($remove);
       $object['POLICY']->content = $xacml->getXmlString();
     }
     catch (Exception $e) {
