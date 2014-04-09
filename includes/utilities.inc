@@ -129,31 +129,19 @@ function saskdora_get_collaborators(AbstractObject $object, $drupal_users_only =
  *   The collaborators to set on the object.
  */
 function saskdora_set_collaborators(AbstractObject $object, array $collaborators) {
-  $xacml = new Xacml();
+  $xacml = new IslandoraXacml($object);
+  $xacml->viewingRule->clear();
+  $xacml->managementRule->clear();
   $users = $collaborators;
   $users[] = saskdora_get_primary_investigator_name($object);
   $xacml->viewingRule->addUser($users);
   $xacml->managementRule->addUser($users);
-  if (isset($object['POLICY'])) {
-    try {
-      $object['POLICY']->content = $xacml->getXmlString();
-    }
-    catch (Exception $e) {
-      $msg = t('Could not update the POLICY datastream on Object %pid .', array('%pid' => $object->id));
-      throw new Exception($msg, $e->getCode(), $e);
-    }
+  try {
+    $xacml->writeBackToFedora();
   }
-  else {
-    try {
-      $ds = $object->constructDatastream('POLICY');
-      $ds->mimetype = 'text/xml';
-      $ds->content = $xacml->getXmlString();
-      $object->ingestDatastream($ds);
-    }
-    catch (Exception $e) {
-      $msg = t('Could not create the POLICY datastream on Object %pid .', array('%pid' => $object->id));
-      throw new Exception($msg, $e->getCode(), $e);
-    }
+  catch (Exception $e) {
+    $msg = t('Could not update the POLICY datastream on Object %pid .', array('%pid' => $object->id));
+    throw new Exception($msg, $e->getCode(), $e);
   }
 }
 
@@ -171,25 +159,20 @@ function saskdora_set_collaborators(AbstractObject $object, array $collaborators
  *   The collaborators to remove from the object.
  */
 function saskdora_update_collaborators(AbstractObject $object, array $add, array $remove) {
-  if (!isset($object['POLICY'])) {
-    saskdora_set_collaborators($object, $add);
+  $xacml = new IslandoraXacml($object);
+  // Remove before adding as we don't want to remove a user that is also
+  // being added automatically such as the owner / primary investigator.
+  $xacml->managementRule->removeUser($remove);
+  $xacml->viewingRule->removeUser($remove);
+  $add[] = saskdora_get_primary_investigator_name($object);
+  $xacml->managementRule->addUser($add);
+  $xacml->viewingRule->addUser($add);
+  try {
+    $xacml->writeBackToFedora();
   }
-  else {
-    try {
-      $xacml = new Xacml($object['POLICY']->content);
-      // Remove before adding as we don't want to remove a user that is also
-      // being added automatically such as the owner / primary investigator.
-      $xacml->managementRule->removeUser($remove);
-      $xacml->viewingRule->removeUser($remove);
-      $add[] = saskdora_get_primary_investigator_name($object);
-      $xacml->managementRule->addUser($add);
-      $xacml->viewingRule->addUser($add);
-      $object['POLICY']->content = $xacml->getXmlString();
-    }
-    catch (Exception $e) {
-      $msg = t('Could not update the POLICY datastream on Object %pid .', array('%pid' => $object->id));
-      throw new Exception($msg, $e->getCode(), $e);
-    }
+  catch (Exception $e) {
+    $msg = t('Could not update the POLICY datastream on Object %pid .', array('%pid' => $object->id));
+    throw new Exception($msg, $e->getCode(), $e);
   }
 }
 
