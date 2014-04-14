@@ -47,7 +47,7 @@ function saskdora_get_primary_investigator_name(AbstractObject $object) {
 function saskdora_is_primary_investigator(AbstractObject $object, $account = NULL) {
   global $user;
   $account = isset($account) ? $account : $user;
-  return saskdora_get_primary_investigator_name($object) == $account->name;
+  return isset($account->name) ? saskdora_get_primary_investigator_name($object) == $account->name : FALSE;
 }
 
 /**
@@ -79,7 +79,7 @@ function saskdora_is_user_a_primary_investigator($account = NULL) {
 function saskdora_is_collaborator(AbstractObject $object, $account = NULL) {
   global $user;
   $account = isset($account) ? $account : $user;
-  return in_array($account->name, saskdora_get_collaborators($object));
+  return isset($account->name) ? in_array($account->name, saskdora_get_collaborators($object)) : FALSE;
 }
 
 /**
