@@ -127,7 +127,7 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
     'propagate_owner' => array(
       '#type' => 'checkbox',
       '#title' => t(
-        'Set Primary Investigator(s) to @owner',
+        'Set Primary Investigator of any children to @owner',
         array('@owner' => $object->owner)
       ),
       '#states' => array(
