@@ -8,7 +8,7 @@ Saskatchewan.
 Its focused largely on implementing a security workflow, wherein specific users
 can manage specific objects.
 
-Collections and objects will be owned and managed by a *Principal Investigator*
+Collections and objects will be owned and managed by a *Primary Investigator*
 (which is often a professor). Each object will also have zero or more
 *Collaborators* (typically graduate students) who are responsible for populating
 the objects with content and creating new objects. Any new objects will belong
