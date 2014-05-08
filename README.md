@@ -12,7 +12,7 @@ Collections and objects will be owned and managed by a *Primary Investigator*
 (which is often a professor). Each object will also have zero or more
 *Collaborators* (typically graduate students) who are responsible for populating
 the objects with content and creating new objects. Any new objects will belong
-belong to the *Principal Investigator* regardless of who creates them.
+belong to the *Primary Investigator* regardless of who creates them.
 
 ## Requirements
 
