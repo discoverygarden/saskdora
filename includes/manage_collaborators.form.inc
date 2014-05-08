@@ -124,6 +124,21 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       '#default_value' => empty($descendants) ? 'none' : NULL,
       '#disabled' => empty($descendants),
     ),
+    'propagate_owner' => array(
+      '#type' => 'checkbox',
+      '#title' => t(
+        'Set Primary Investigator of any children to @owner',
+        array('@owner' => $object->owner)
+      ),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="recursive"]' => array(
+            array('value' => 'differences'),
+            array('value' => 'identical'),
+          ),
+        ),
+      ),
+    ),
     'submit' => array(
       '#type' => 'submit',
       '#value' => t('Save Changes'),
@@ -131,6 +146,7 @@ function saskdora_manage_collaborators_form(array $form, array &$form_state, Abs
       '#limit_validation_errors' => array(
         array('collaborators'),
         array('recursive'),
+        array('propagate_owner'),
       ),
     ),
     'cancel' => array(
@@ -274,11 +290,22 @@ function saskdora_manage_collaborators_form_submit(array $form, array &$form_sta
       break;
 
     case 'differences':
-      $batch = saskdora_update_collaborators_recursive_batch_definition($object, $added, $removed);
+      $batch = saskdora_update_collaborators_recursive_batch_definition(
+        $object,
+        $added,
+        $removed,
+        TRUE,
+        $form_state['values']['propagate_owner']
+      );
       break;
 
     case 'identical':
-      $batch = saskdora_set_collaborators_recursive_batch_definition($object, $new_collaborators);
+      $batch = saskdora_set_collaborators_recursive_batch_definition(
+        $object,
+        $new_collaborators,
+        TRUE,
+        $form_state['values']['propagate_owner']
+      );
       break;
   }
   if (isset($batch)) {

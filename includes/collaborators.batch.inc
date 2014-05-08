@@ -53,11 +53,14 @@ function saskdora_set_collaborators_batch_definition(AbstractObject $object, arr
  *   The collaborators to remove.
  * @param bool $display_message
  *   TRUE to show the results of the batch as a message FALSE otherwise.
+ * @param bool $propagate_owner
+ *   Wether or not to propagate the owner to children objects.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_update_collaborators_recursive_batch_definition(AbstractObject $object, array $add, array $remove, $display_message = TRUE) {
+function saskdora_update_collaborators_recursive_batch_definition(AbstractObject $object, array $add, array $remove, $display_message = TRUE, $propagate_owner = FALSE) {
+  $owner = $propagate_owner ? $object->owner : NULL;
   return array(
     'operations' => array(
       array(
@@ -70,7 +73,7 @@ function saskdora_update_collaborators_recursive_batch_definition(AbstractObject
       ),
       array(
         'saskdora_collaborators_update_collaborators_batch_operation',
-        array($add, $remove),
+        array($add, $remove, $owner),
       ),
     ),
     'finished' => 'saskdora_collaborators_batch_finished',
@@ -94,11 +97,14 @@ function saskdora_update_collaborators_recursive_batch_definition(AbstractObject
  *   The collaborators to grant access to the object.
  * @param bool $display_message
  *   TRUE to show the results of the batch as a message FALSE otherwise.
+ * @param bool $propagate_owner
+ *   Wether or not to propagate the owner to children objects.
  *
  * @return array
  *   The batch definition.
  */
-function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $object, array $collaborators, $display_message = TRUE) {
+function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $object, array $collaborators, $display_message = TRUE, $propagate_owner = FALSE) {
+  $owner = $propagate_owner ? $object->owner : NULL;
   return array(
     'operations' => array(
       array(
@@ -111,7 +117,7 @@ function saskdora_set_collaborators_recursive_batch_definition(AbstractObject $o
       ),
       array(
         'saskdora_collaborators_set_collaborators_batch_operation',
-        array($collaborators),
+        array($collaborators, $owner),
       ),
     ),
     'finished' => 'saskdora_collaborators_batch_finished',
@@ -230,10 +236,12 @@ function saskdora_find_descendants_batch_operation(array &$context) {
  *   The collaborators to add to the POLICY.
  * @param string[] $remove
  *   The collaborators to remove from the POLICY.
+ * @param mixed $owner
+ *   The owner to set on the object or NULL if it shouldn't be updated.
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_collaborators_update_collaborators_batch_operation(array $add, array $remove, array &$context) {
+function saskdora_collaborators_update_collaborators_batch_operation(array $add, array $remove, $owner, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $results = &$context['results'];
   if (empty($context['sandbox'])) {
@@ -243,6 +251,9 @@ function saskdora_collaborators_update_collaborators_batch_operation(array $add,
   $index = &$context['sandbox']['progress'];
   $pid = $context['results']['objects'][$index];
   $object = islandora_object_load($pid);
+  if (!is_null($owner)) {
+    $object->owner = $owner;
+  }
   if (!$object) {
     watchdog('saskdora', 'Object %pid not found and could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
     $results['successful'][$pid] = FALSE;
@@ -273,10 +284,12 @@ function saskdora_collaborators_update_collaborators_batch_operation(array $add,
  *
  * @param string[] $collaborators
  *   The collaborators to set on the POLICY.
+ * @param mixed $owner
+ *   The owner to set on the object or NULL if it shouldn't be updated.
  * @param array $context
  *   The context of this batch operation.
  */
-function saskdora_collaborators_set_collaborators_batch_operation(array $collaborators, array &$context) {
+function saskdora_collaborators_set_collaborators_batch_operation(array $collaborators, $owner, array &$context) {
   module_load_include('inc', 'saskdora', 'includes/utilities');
   $results = &$context['results'];
   if (empty($context['sandbox'])) {
@@ -286,6 +299,9 @@ function saskdora_collaborators_set_collaborators_batch_operation(array $collabo
   $index = &$context['sandbox']['progress'];
   $pid = $context['results']['objects'][$index];
   $object = islandora_object_load($pid);
+  if (!is_null($owner)) {
+    $object->owner = $owner;
+  }
   if (!$object) {
     watchdog('saskdora', 'Object %pid not found and could not be updated.', array('%pid' => $pid), WATCHDOG_ERROR);
     $results['successful'][$pid] = FALSE;
