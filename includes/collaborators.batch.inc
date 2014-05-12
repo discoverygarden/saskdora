@@ -27,7 +27,7 @@ function saskdora_set_collaborators_batch_definition(AbstractObject $object, arr
       ),
       array(
         'saskdora_collaborators_set_collaborators_batch_operation',
-        array($collaborators),
+        array($collaborators, NULL),
       ),
     ),
     'finished' => 'saskdora_collaborators_batch_finished',
