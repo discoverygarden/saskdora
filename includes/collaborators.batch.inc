@@ -380,7 +380,7 @@ function saskdora_set_primary_investigator_and_collaborators_batch_operation($pr
  */
 function saskdora_collaborators_batch_finished($success, $results, $operations) {
   if ($success) {
-    if ($results['options']['display_message']) {
+    if (isset($results['options']) && $results['options']['display_message']) {
       $total = count($results['successful']);
       $successful = count(array_filter($results['successful']));
       $failed = $total - $successful;
