@@ -210,12 +210,7 @@ function saskdora_preprocess_islandora_bookmark_list_columns(&$variables) {
   foreach ($variables['objects'] as $key => $value) {
     $pid_arr = array_keys($value);
     foreach ($pid_arr as $pid) {
-      if ($pid == "islandora:root") {
-        continue;
-      }
       $object = islandora_object_load($pid);
-      $title = "";
-
       $dc = $object['DC']->content;
       $dc_object = DublinCore::importFromXMLString($dc);
       $description = reset($dc_object->dc['dc:description']);
