@@ -215,12 +215,18 @@ function saskdora_preprocess_islandora_bookmark_list_columns(&$variables) {
       $dc_object = DublinCore::importFromXMLString($dc);
       $description = reset($dc_object->dc['dc:description']);
       // Truncate description, so its not crazy long.
-      $description = (strlen($description) > 50) ? substr($description, 0, 47) . '...' : $description;
-      if (!isset($variables['bookmark_item_main']) && isset($object['JPG'])) {
+      $description = truncate_utf8($description, 50, TRUE, TRUE);
+      if (!isset($variables['bookmark_item_main']) && (isset($object['JPG']) || isset($object['MEDIUM_SIZE']))) {
+        if (isset($object['JPG'])) {
+          $datastream = 'JPG';
+        }
+        else {
+          $datastream = 'MEDIUM_SIZE';
+        }
         $variables['bookmark_item_main'] = array(
           "img" => theme_image(
             array(
-              'path' => url("islandora/object/$pid/datastream/JPG/view"),
+              'path' => url("islandora/object/$pid/datastream/$datastream/view"),
               'width' => '100%',
               'height' => '100%',
               'attributes' => array(
@@ -232,16 +238,23 @@ function saskdora_preprocess_islandora_bookmark_list_columns(&$variables) {
       }
       else {
         if (isset($object['TN'])) {
-          $variables['bookmark_item_thumb'][] = array(
-            "img" => theme_image(
-              array(
-                'path' => url("islandora/object/$pid/datastream/TN/view"),
-                'attributes' => array(
-                  'class' => 'islandora-bookmark-image-tn',
-                ),
-              )
-            ), 'title' => $object->label, "description" => $description, "view" => url("islandora/object/$pid"));
+          $image = theme('image', array(
+            'path' => url("islandora/object/$pid/datastream/TN/view"),
+            'attributes' => array(
+              'class' => 'islandora-bookmark-image-tn',
+            ),
+          ));
         }
+        else {
+          $image_path = drupal_get_path('module', 'islandora');
+          $image = theme('image', array('path' => "$image_path/images/folder.png"));
+        }
+        $variables['bookmark_item_thumb'][] = array(
+          'img' => $image,
+          'title' => $object->label,
+          'description' => $description,
+          'view' => url("islandora/object/$pid"),
+        );
       }
     }
   }
