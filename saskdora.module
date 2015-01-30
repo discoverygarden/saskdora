@@ -224,7 +224,7 @@ function saskdora_preprocess_islandora_bookmark_list_columns(&$variables) {
           $datastream = 'MEDIUM_SIZE';
         }
         $variables['bookmark_item_main'] = array(
-          "img" => theme_image(
+          "img" => theme('image',
             array(
               'path' => url("islandora/object/$pid/datastream/$datastream/view"),
               'width' => '100%',
