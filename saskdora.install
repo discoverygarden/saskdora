@@ -34,7 +34,7 @@ function saskdora_install() {
     array('access user profiles', 'can manage collaborators')
   );
   user_role_grant_permissions($primary->rid, $primary_perms);
-  // Move the Admin user to the back up the line
+  // Move the Admin user to the back up the line.
   $administrator = user_role_load_by_name('administrator');
   if ($administrator) {
     $administrator->weight = $primary->weight + 1;
